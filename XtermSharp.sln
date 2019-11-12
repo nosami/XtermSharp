@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MacTerminal", "MacTerminal\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{3ED09342-A454-4CB4-B6C7-CD1D27FD106A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.VSMac", "XTermSharp.VSMac\XTermSharp.VSMac.csproj", "{D1DEC1D1-DB96-4431-94D2-815CCD62723E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{3ED09342-A454-4CB4-B6C7-CD1D27FD106A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3ED09342-A454-4CB4-B6C7-CD1D27FD106A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3ED09342-A454-4CB4-B6C7-CD1D27FD106A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1DEC1D1-DB96-4431-94D2-815CCD62723E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1DEC1D1-DB96-4431-94D2-815CCD62723E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1DEC1D1-DB96-4431-94D2-815CCD62723E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1DEC1D1-DB96-4431-94D2-815CCD62723E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

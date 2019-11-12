@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionModel>
+    <Extension path="/MonoDevelop/Ide/Pads">
+        <Pad id="XtermSharp.VSMac.VSMacTerm" defaultPlacement="Bottom" _label="Terminal" icon="md-project" class="XtermSharp.VSMac.VSMacTerm" />
+    </Extension>
+</ExtensionModel>
