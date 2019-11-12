@@ -29,6 +29,10 @@ namespace XtermSharp.Mac {
 			fontBold = NSFont.FromFontName ("xLucida Sans Typewriter Bold", 14) ?? NSFont.FromFontName ("Courier Bold", 14);
 			fontItalic = NSFont.FromFontName ("xLucida Sans Typewriter Oblique", 14) ?? NSFont.FromFontName ("Courier Oblique", 14);
 			fontBoldItalic = NSFont.FromFontName ("xLucida Sans Typewriter Bold Oblique", 14) ?? NSFont.FromFontName ("Courier Bold Oblique", 14);
+			fontNormal = NSFont.FromFontName ("Menlo", 14);
+			fontBold = NSFont.FromFontName ("Menlo Bold", 14);
+			fontItalic = NSFont.FromFontName ("Menlo", 14);
+			fontBoldItalic = NSFont.FromFontName ("Menlo", 14);
 			ComputeCellDimensions ();
 
 			var cols = (int)(rect.Width / cellWidth);
@@ -493,8 +497,6 @@ namespace XtermSharp.Mac {
 		{
 			UserInput?.Invoke (data);
 		}
-
-		
 
 		[Export ("doCommandBySelector:")]
 		public void DoCommandBySelector (Selector selector)
