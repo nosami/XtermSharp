@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using CoreFoundation;
+using CoreGraphics;
 using MonoDevelop.Components;
+using MonoDevelop.Core;
 using MonoDevelop.Ide.Gui;
 using XtermSharp.Mac;
 
@@ -22,9 +24,30 @@ namespace XtermSharp.VSMac {
 		public override Control Control => terminal;
 	}
 
+	class TerminalPadView : TerminalView {
+		private CGSize size;
+
+		public TerminalPadView (CGRect rect) : base (rect)
+		{
+		}
+
+		public override void SetFrameSize (CGSize newSize)
+		{
+			base.SetFrameSize (newSize);
+                        if (size != newSize) {
+				size = newSize;
+				var rect = new CGRect (0, 0, newSize.Width, newSize.Height);
+				base.Frame = rect;
+			} else {
+				size = newSize;
+			}
+		}
+		public override CGRect Frame { get => base.Frame; set => base.Frame = value; }
+	}
+
 	class TerminalControl : Control
 	{
-		readonly TerminalView terminalView;
+		readonly TerminalPadView terminalView;
 		int pid, fd;
 		byte [] readBuffer = new byte [4 * 1024];
 
@@ -36,7 +59,7 @@ namespace XtermSharp.VSMac {
 		public TerminalControl()
 		{
 			
-			terminalView = new TerminalView (new CoreGraphics.CGRect (0, 0, 1200, 300));
+			terminalView = new TerminalPadView (new CoreGraphics.CGRect (0, 0, 1200, 300));
 			var t = terminalView.Terminal;
 			var size = new UnixWindowSize ();
 			GetSize (t, ref size);
@@ -59,6 +82,12 @@ namespace XtermSharp.VSMac {
 				Console.WriteLine (res);
 			};
 		}
+
+		//public override void ViewDidLayout ()
+		//{
+		//	base.ViewDidLayout ();
+		//	terminalView.Frame = View.Frame;
+		//}
 
 		void GetSize (Terminal terminal, ref UnixWindowSize size)
 		{
