@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MacTerminal", "MacTerminal\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{3ED09342-A454-4CB4-B6C7-CD1D27FD106A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XtermSharp.VSMac", "XTermSharp.VSMac\XTermSharp.VSMac.csproj", "{D1DEC1D1-DB96-4431-94D2-815CCD62723E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XTermSharp.VSMac", "XTermSharp.VSMac\XTermSharp.VSMac.csproj", "{D1DEC1D1-DB96-4431-94D2-815CCD62723E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1922,6 +1922,7 @@ namespace XtermSharp {
 		{
 			int param = Math.Max (pars.Length > 0 ? pars [0] : 1, 1);
 			var buffer = terminal.Buffer;
+
 			if (buffer.Y - param < 0)
 				buffer.Y = 0;
 			else
@@ -2052,6 +2053,7 @@ namespace XtermSharp {
 
 						if (buffer.Y >= buffer.ScrollBottom) {
 							terminal.Scroll (isWrapped: true);
+							//buffer.Y++;
 						} else {
 							// The line already exists (eg. the initial viewport), mark it as a
 							// wrapped line

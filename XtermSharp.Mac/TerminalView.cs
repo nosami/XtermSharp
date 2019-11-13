@@ -72,10 +72,19 @@ namespace XtermSharp.Mac {
 
 		void ComputeCellDimensions ()
 		{
+			//var style = new NSMutableParagraphStyle ();
+			//style.LineSpacing = 40;
+			//style.MinimumLineHeight = 40;
+			//style.LineHeightMultiple = 2;
+
+			//var attributedString = new NSMutableAttributedString ("W", new CTStringAttributes () { Font = fontNormal });
+			//attributedString.AddAttribute (CTStringAttributeKey.ParagraphStyle, style, new NSRange (0, attributedString.Length));
+			//	new NSAttributedString ("W", new NSStringAttributes () { Font = fontNormal })
+			//res.AddAttribute (CTStringAttributeKey.ParagraphStyle, style, new NSRange (0, res.Length));
 			var line = new CTLine (new NSAttributedString ("W", new NSStringAttributes () { Font = fontNormal }));
 			var bounds = line.GetBounds (CTLineBoundsOptions.UseOpticalBounds);
 			cellWidth = bounds.Width;
-			cellHeight = bounds.Height;
+			cellHeight = bounds.Height + 5;
 			cellDelta = bounds.Y;
 		}
 
@@ -138,8 +147,11 @@ namespace XtermSharp.Mac {
 				font = fontItalic;
 			else
 				font = fontNormal;
-			
-			var nsattr = new NSStringAttributes () { Font = font, ForegroundColor = MapColor (fg, true),  BackgroundColor = MapColor (bg, false)  };
+
+			var paragraphStyle = new NSMutableParagraphStyle ();
+			paragraphStyle.LineSpacing = 5;
+			paragraphStyle.LineHeightMultiple = 2;
+			var nsattr = new NSStringAttributes () { Font = font, ForegroundColor = MapColor (fg, true),  BackgroundColor = MapColor (bg, false), ParagraphStyle = paragraphStyle };
 			if (flags.HasFlag (FLAGS.UNDERLINE)) {
 				nsattr.UnderlineColor = nsattr.ForegroundColor;
 				nsattr.UnderlineStyle = (int) NSUnderlineStyle.Single;
@@ -151,17 +163,21 @@ namespace XtermSharp.Mac {
 
 		NSAttributedString BuildAttributedString (BufferLine line, int cols)
 		{
-			var res = new NSMutableAttributedString ();
+			var res = new NSMutableAttributedString();
+			
 			int attr = 0;
 
 			basBuilder.Clear ();
+
+			
 			for (int col = 0; col < cols; col++) {
 				var ch = line [col];
 				if (col == 0)
 					attr = ch.Attribute;
 				else {
 					if (attr != ch.Attribute) {
-						res.Append (new NSAttributedString (basBuilder.ToString (), GetAttributes (attr)));
+						var attributedString = new NSAttributedString (basBuilder.ToString (), GetAttributes (attr));
+						res.Append (attributedString);
 						basBuilder.Clear ();
 						attr = ch.Attribute;
 					}
@@ -169,6 +185,13 @@ namespace XtermSharp.Mac {
 				basBuilder.Append (ch.Code == 0 ? ' ' : (char)ch.Rune);
 			}
 			res.Append (new NSAttributedString (basBuilder.ToString (), GetAttributes (attr)));
+
+			var style = new NSMutableParagraphStyle ();
+			style.LineSpacing = 40;
+			style.MinimumLineHeight = 40;
+
+			style.LineHeightMultiple = 2;
+			res.AddAttribute (NSStringAttributeKey.ParagraphStyle, style, new NSRange (0, res.Length));
 			return res;
 		}
 
@@ -184,7 +207,7 @@ namespace XtermSharp.Mac {
 
 		void UpdateCursorPosition ()
 		{
-			caret.Frame = new CGRect (terminal.Buffer.X * cellWidth - 1, Frame.Height - cellHeight - (terminal.Buffer.Y * cellHeight - cellDelta - 1), cellWidth + 2, cellHeight + 2);
+			caret.Frame = new CGRect (terminal.Buffer.X * cellWidth - 1, Frame.Height - cellHeight - (terminal.Buffer.Y * cellHeight - cellDelta - 1), cellWidth, cellHeight + 2);
 		}
 
 		void UpdateDisplay ()
@@ -194,7 +217,10 @@ namespace XtermSharp.Mac {
 			var cols = terminal.Cols;
 			var tb = terminal.Buffer;
 			for (int row = rowStart; row <= rowEnd; row++) {
-				buffer [row + tb.YDisp] = BuildAttributedString (terminal.Buffer.Lines [row + tb.YDisp], cols);
+				var rowIndex = row + tb.YDisp;
+				if(terminal.Buffer.Lines.Length > rowIndex) {
+					buffer [rowIndex] = BuildAttributedString (terminal.Buffer.Lines [rowIndex], cols);
+				}
 			}
 			//var baseLine = Frame.Height - cellDelta;
 			// new CGPoint (0, baseLine - (cellHeight + row * cellHeight));
