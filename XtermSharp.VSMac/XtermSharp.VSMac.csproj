@@ -45,6 +45,15 @@
     <Reference Include="XtermSharp">
       <HintPath>..\XtermSharp\bin\Debug\netstandard2.0\XtermSharp.dll</HintPath>
     </Reference>
+    <Reference Include="XtermSharp">
+      <HintPath>..\XtermSharp.Mac\bin\Debug\XtermSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="XtermSharp.Mac">
+      <HintPath>..\XtermSharp.Mac\bin\Debug\XtermSharp.Mac.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <AddinReference Include="MonoDevelop.TextEditor.Cocoa" />
   </ItemGroup>
   <Import Project="..\packages\MonoDevelop.Addins.0.4.7\build\MonoDevelop.Addins.targets" Condition="Exists('..\packages\MonoDevelop.Addins.0.4.7\build\MonoDevelop.Addins.targets')" />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

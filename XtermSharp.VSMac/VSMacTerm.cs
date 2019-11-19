@@ -1,12 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using AppKit;
 using CoreFoundation;
 using CoreGraphics;
+using Microsoft.VisualStudio.Text.Editor;
 using MonoDevelop.Components;
+using MonoDevelop.Components.Commands;
 using MonoDevelop.Core;
+using MonoDevelop.Ide;
+using MonoDevelop.Ide.Commands;
+using MonoDevelop.Ide.Fonts;
 using MonoDevelop.Ide.Gui;
+using MonoDevelop.Ide.Gui.Content;
 using XtermSharp.Mac;
-
 namespace XtermSharp.VSMac {
 	public class VSMacTerm : MonoDevelop.Ide.Gui.PadContent
 	{
@@ -22,12 +31,25 @@ namespace XtermSharp.VSMac {
                 }
 		
 		public override Control Control => terminal;
+
+		[CommandHandler (ViewCommands.ZoomIn)]
+		public void ZoomIn () { 
+                
+			var editorFont = IdeServices.FontService.GetFont ("Editor");
+			var font = NSFont.FromFontName (editorFont.Family,  (nfloat)editorFont.Size);
+                }
+
+  //  [<CommandHandler ("MonoDevelop.Ide.Commands.ViewCommands.ZoomOut")>]
+		//member x.ZoomOut () = x.Editor.GetContent<IZoomable>().ZoomOut ()
+
+  //  [<CommandHandler ("MonoDevelop.Ide.Commands.ViewCommands.ZoomReset")>]
+		//member x.ZoomReset () = x.Editor.GetContent<IZoomable>().ZoomReset ()
 	}
 
 	class TerminalPadView : TerminalView {
 		private CGSize size;
 
-		public TerminalPadView (CGRect rect) : base (rect)
+		public TerminalPadView (CGRect rect, TerminalViewOptions options) : base (rect, options)
 		{
 		}
 
@@ -56,10 +78,28 @@ namespace XtermSharp.VSMac {
 			return terminalView;
 		}
 
+		NSFont GetEditorFont ()
+		{
+			var editorFont = IdeServices.FontService.GetFont ("Editor");
+			return NSFont.FromFontName (editorFont.Family, (nfloat)editorFont.Size);
+		}
+
 		public TerminalControl()
 		{
+			var zoomable = IdeApp.Workbench.ActiveDocument.GetContent<ICocoaTextView> ();
 			
-			terminalView = new TerminalPadView (new CoreGraphics.CGRect (0, 0, 1200, 300));
+			var options = new TerminalViewOptions ();
+			options.Font = GetEditorFont ();
+			terminalView = new TerminalPadView (new CGRect (0, 0, 1200, 300), options);
+
+			zoomable.ZoomLevelChanged += (sender, args) => {
+				var font = GetEditorFont ();
+				var newFont = NSFont.FromFontName (font.FontName, (int)(font.PointSize * (nfloat)(args.NewZoomLevel / 100)));
+
+				terminalView.FontNormal = newFont;
+				terminalView.ComputeCellDimensions ();
+			};
+
 			var t = terminalView.Terminal;
 			var size = new UnixWindowSize ();
 			GetSize (t, ref size);

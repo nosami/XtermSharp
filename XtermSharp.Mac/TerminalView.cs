@@ -10,6 +10,9 @@ using XtermSharp;
 using CoreFoundation;
 
 namespace XtermSharp.Mac {
+	public class TerminalViewOptions {
+        public NSFont Font { get; set; }
+    }
 	/// <summary>
 	/// An AppKit Terminal View.
 	/// </summary>
@@ -23,13 +26,13 @@ namespace XtermSharp.Mac {
 		
 		nfloat cellHeight, cellWidth, cellDelta;
 
-		public TerminalView (CGRect rect) : base (rect)
+		public bool HasFocus { get; private set; }
+		//TODO: hack
+		public NSFont FontNormal { set => fontNormal = value; }
+
+		public TerminalView (CGRect rect, TerminalViewOptions options) : base (rect)
 		{
-			fontNormal = NSFont.FromFontName ("xLucida Sans Typewriter", 14) ?? NSFont.FromFontName ("Courier", 14);
-			fontBold = NSFont.FromFontName ("xLucida Sans Typewriter Bold", 14) ?? NSFont.FromFontName ("Courier Bold", 14);
-			fontItalic = NSFont.FromFontName ("xLucida Sans Typewriter Oblique", 14) ?? NSFont.FromFontName ("Courier Oblique", 14);
-			fontBoldItalic = NSFont.FromFontName ("xLucida Sans Typewriter Bold Oblique", 14) ?? NSFont.FromFontName ("Courier Bold Oblique", 14);
-			fontNormal = NSFont.FromFontName ("Menlo", 14);
+			fontNormal = options.Font;
 			fontBold = NSFont.FromFontName ("Menlo Bold", 14);
 			fontItalic = NSFont.FromFontName ("Menlo", 14);
 			fontBoldItalic = NSFont.FromFontName ("Menlo", 14);
@@ -70,7 +73,7 @@ namespace XtermSharp.Mac {
 		/// <value><c>true</c> if option acts as a meta key; otherwise, <c>false</c>.</value>
 		public bool OptionAsMetaKey { get; set; } = true;
 
-		void ComputeCellDimensions ()
+		public void ComputeCellDimensions ()
 		{
 			//var style = new NSMutableParagraphStyle ();
 			//style.LineSpacing = 40;
@@ -603,8 +606,6 @@ namespace XtermSharp.Mac {
 
 		[Export ("selectedRange")]
 		public NSRange SelectedRange => notFoundRange;
-
-		public bool HasFocus { get; private set; }
 
 		[Export ("attributedSubstringForProposedRange:actualRange:")]
 		public NSAttributedString AttributedSubstringForProposedRange (NSRange range, out NSRange actualRange)
