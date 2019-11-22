@@ -36,7 +36,6 @@ namespace MacTerminal {
 				}
 				byte [] copy = new byte [(int)size];
 				Marshal.Copy (buffer, copy, 0, (int)size);
-				mc 
 				System.IO.File.WriteAllBytes ("/tmp/log-" + (x++), copy);
 				terminalView.Feed (copy);
 			}
@@ -63,7 +62,9 @@ namespace MacTerminal {
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
-			terminalView = new TerminalView (View.Frame);
+			var font = NSFont.FromFontName ("Menlo", 14);
+			var options = new TerminalViewOptions { Font = font };
+			terminalView = new TerminalView (View.Frame, options);
 			var t = terminalView.Terminal;
 			var size = new UnixWindowSize ();
 			GetSize (t, ref size);

@@ -248,7 +248,7 @@ namespace XtermSharp {
 		//
 		// ESC c Full Reset (RIS)
 		//
-		internal void Reset ()
+		public void Reset ()
 		{
 			Options.Rows = Rows;
 			Options.Cols = Cols;

@@ -16,7 +16,17 @@ using MonoDevelop.Ide.Fonts;
 using MonoDevelop.Ide.Gui;
 using MonoDevelop.Ide.Gui.Content;
 using XtermSharp.Mac;
+using Xwt;
+using Xwt.Drawing;
+using Xwt.Mac;
 namespace XtermSharp.VSMac {
+	public static class Util {
+		public static NSColor ToNSColor (this Xwt.Drawing.Color col)
+		{
+			return NSColor.FromDeviceRgba ((float)col.Red, (float)col.Green, (float)col.Blue, (float)col.Alpha);
+		}
+	}
+
 	public class VSMacTerm : MonoDevelop.Ide.Gui.PadContent
 	{
 		readonly TerminalControl terminal;
@@ -84,21 +94,31 @@ namespace XtermSharp.VSMac {
 			return NSFont.FromFontName (editorFont.Family, (nfloat)editorFont.Size);
 		}
 
+		void SetFonts(TerminalViewOptions options)
+		{
+
+			var editorFont = IdeServices.FontService.GetFont ("Editor");
+			var font = NSFont.FromFontName (editorFont.Family, (nfloat)editorFont.Size);
+			options.Font = font;
+			//TODO:
+			options.FontBold = font;
+			options.FontBoldItalic = font;
+			options.FontItalic = font;
+		}
+
 		public TerminalControl()
 		{
 			var zoomable = IdeApp.Workbench.ActiveDocument.GetContent<ICocoaTextView> ();
 			
 			var options = new TerminalViewOptions ();
-			options.Font = GetEditorFont ();
+			SetFonts (options);
+			//options.Font = GetEditorFont ();
+			var bgColor = MonoDevelop.Ide.Gui.Styles.BackgroundColor.ToNSColor ();
+			var fgColor = MonoDevelop.Ide.Gui.Styles.BaseForegroundColor.ToNSColor ();
+			options.BackgroundColor = bgColor;
+			options.ForegroundColor = fgColor;
 			terminalView = new TerminalPadView (new CGRect (0, 0, 1200, 300), options);
 
-			zoomable.ZoomLevelChanged += (sender, args) => {
-				var font = GetEditorFont ();
-				var newFont = NSFont.FromFontName (font.FontName, (int)(font.PointSize * (nfloat)(args.NewZoomLevel / 100)));
-
-				terminalView.FontNormal = newFont;
-				terminalView.ComputeCellDimensions ();
-			};
 
 			var t = terminalView.Terminal;
 			var size = new UnixWindowSize ();
@@ -107,6 +127,26 @@ namespace XtermSharp.VSMac {
 			pid = Pty.ForkAndExec ("/bin/bash", new string [] { "/bin/bash" }, Terminal.GetEnvironmentVariables (), out fd, size);
 			DispatchIO.Read (fd, (nuint)readBuffer.Length, DispatchQueue.CurrentQueue, ChildProcessRead);
 
+			zoomable.ZoomLevelChanged += (sender, args) => {
+				var font = GetEditorFont ();
+				SetFonts (options);
+				var newFont = NSFont.FromFontName (font.FontName, (int)(font.PointSize * (nfloat)(args.NewZoomLevel / 100)));
+				options.Font = newFont;
+				options.FontBold = newFont;
+				options.FontBoldItalic = newFont;
+				options.FontItalic = newFont;
+				//terminalView.FontNormal = newFont;
+				terminalView.ComputeCellDimensions ();
+				var newsize = new UnixWindowSize ();
+				GetSize (terminalView.Terminal, ref newsize);
+				terminalView.Terminal.Resize (newsize.col, newsize.row);
+				var res = Pty.SetWinSize (fd, ref newsize);
+				
+				terminalView.UpdateDisplay ();
+				terminalView.FullBufferUpdate ();
+				terminalView.QueuePendingDisplay ();
+				terminalView.Frame = terminalView.Frame;
+			};
 
 			terminalView.UserInput += (byte [] data) => {
 				DispatchIO.Write (fd, DispatchData.FromByteBuffer (data), DispatchQueue.CurrentQueue, ChildProcessWrite);
@@ -123,7 +163,7 @@ namespace XtermSharp.VSMac {
 			};
 		}
 
-		//public override void ViewDidLayout ()
+		//public override void ViewDidLayout (
 		//{
 		//	base.ViewDidLayout ();
 		//	terminalView.Frame = View.Frame;

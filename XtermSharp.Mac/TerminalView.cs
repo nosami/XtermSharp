@@ -11,8 +11,14 @@ using CoreFoundation;
 
 namespace XtermSharp.Mac {
 	public class TerminalViewOptions {
-        public NSFont Font { get; set; }
-    }
+		public NSFont Font { get; set; } = NSFont.FromFontName ("Menlo", 14);
+		public NSFont FontItalic { get; set; } = NSFont.FromFontName ("Menlo Bold", 14);
+		public NSFont FontBold { get; set; } = NSFont.FromFontName ("Menlo Bold", 14);
+		public NSFont FontBoldItalic { get; set; } = NSFont.FromFontName ("Menlo Bold", 14);
+		public NSColor ForegroundColor { get; set; } = NSColor.White;
+		public NSColor BackgroundColor { get; set; } = NSColor.Black;
+	}
+
 	/// <summary>
 	/// An AppKit Terminal View.
 	/// </summary>
@@ -21,21 +27,22 @@ namespace XtermSharp.Mac {
 
 		Terminal terminal;
 		CircularList<NSAttributedString> buffer;
-		NSFont fontNormal, fontItalic, fontBold, fontBoldItalic;
+		//NSFont fontNormal, fontItalic, fontBold, fontBoldItalic;
 		NSView caret, debug;
 		
 		nfloat cellHeight, cellWidth, cellDelta;
 
 		public bool HasFocus { get; private set; }
-		//TODO: hack
-		public NSFont FontNormal { set => fontNormal = value; }
 
 		public TerminalView (CGRect rect, TerminalViewOptions options) : base (rect)
 		{
-			fontNormal = options.Font;
-			fontBold = NSFont.FromFontName ("Menlo Bold", 14);
-			fontItalic = NSFont.FromFontName ("Menlo", 14);
-			fontBoldItalic = NSFont.FromFontName ("Menlo", 14);
+			this.options = options;
+			
+			
+			//fontNormal = options.Font;
+			//fontBold = options.FontBold;
+			//fontItalic = options.FontItalic;
+			//fontBoldItalic = options.FontBoldItalic;
 			ComputeCellDimensions ();
 
 			var cols = (int)(rect.Width / cellWidth);
@@ -84,11 +91,15 @@ namespace XtermSharp.Mac {
 			//attributedString.AddAttribute (CTStringAttributeKey.ParagraphStyle, style, new NSRange (0, attributedString.Length));
 			//	new NSAttributedString ("W", new NSStringAttributes () { Font = fontNormal })
 			//res.AddAttribute (CTStringAttributeKey.ParagraphStyle, style, new NSRange (0, res.Length));
-			var line = new CTLine (new NSAttributedString ("W", new NSStringAttributes () { Font = fontNormal }));
+			var line = new CTLine (new NSAttributedString ("W", new NSStringAttributes () { Font = options.Font }));
 			var bounds = line.GetBounds (CTLineBoundsOptions.UseOpticalBounds);
 			cellWidth = bounds.Width;
-			cellHeight = bounds.Height + 5;
+			//cellHeight = bounds.Height + 5;
+			cellHeight = (int)bounds.Height;
 			cellDelta = bounds.Y;
+
+			// We call ComputeCellDimensions when the font size is zoomed
+			attributes.Clear ();
 		}
 
 		StringBuilder basBuilder = new StringBuilder ();
@@ -100,14 +111,14 @@ namespace XtermSharp.Mac {
 			// The default color
 			if (color == Renderer.DefaultColor) {
 				if (isFg)
-					return NSColor.Black;
+					return options.ForegroundColor;
 				else
-					return NSColor.White;
+					return options.BackgroundColor;
 			} else if (color == Renderer.InvertedDefaultColor) {
 				if (isFg)
-					return NSColor.White;
+					return options.BackgroundColor;
 				else
-					return NSColor.Black;
+					return options.ForegroundColor;
 			}
 
 			if (colors [color] == null) {
@@ -141,20 +152,20 @@ namespace XtermSharp.Mac {
 				return result;
 
 			NSFont font;
-			if (flags.HasFlag (FLAGS.BOLD)){
+			if (flags.HasFlag (FLAGS.BOLD)) {
 				if (flags.HasFlag (FLAGS.ITALIC))
-					font = fontBoldItalic;
+					font = options.FontBoldItalic;
 				else
-					font = fontBold;
+					font = options.FontBold;
 			} else if (flags.HasFlag (FLAGS.ITALIC))
-				font = fontItalic;
+				font = options.FontItalic;
 			else
-				font = fontNormal;
+				font = options.Font;
 
 			var paragraphStyle = new NSMutableParagraphStyle ();
 			paragraphStyle.LineSpacing = 5;
 			paragraphStyle.LineHeightMultiple = 2;
-			var nsattr = new NSStringAttributes () { Font = font, ForegroundColor = MapColor (fg, true),  BackgroundColor = MapColor (bg, false), ParagraphStyle = paragraphStyle };
+			var nsattr = new NSStringAttributes () { Font = font, ForegroundColor = MapColor (fg, true), BackgroundColor = MapColor (bg, false), ParagraphStyle = paragraphStyle };
 			if (flags.HasFlag (FLAGS.UNDERLINE)) {
 				nsattr.UnderlineColor = nsattr.ForegroundColor;
 				nsattr.UnderlineStyle = (int) NSUnderlineStyle.Single;
@@ -198,7 +209,7 @@ namespace XtermSharp.Mac {
 			return res;
 		}
 
-		void FullBufferUpdate ()
+		public void FullBufferUpdate ()
 		{
 			var rows = terminal.Rows;
 			if (buffer == null)
@@ -213,7 +224,7 @@ namespace XtermSharp.Mac {
 			caret.Frame = new CGRect (terminal.Buffer.X * cellWidth - 1, Frame.Height - cellHeight - (terminal.Buffer.Y * cellHeight - cellDelta - 1), cellWidth, cellHeight + 2);
 		}
 
-		void UpdateDisplay ()
+		public void UpdateDisplay ()
 		{
 			terminal.GetUpdateRange (out var rowStart, out var rowEnd);
 			terminal.ClearUpdateRange ();
@@ -255,7 +266,7 @@ namespace XtermSharp.Mac {
 		// in blocks of 1024 bytes, which is not enough to cover the whole screen, so this delays
 		// the update for a 1/600th of a secon.
 		bool pendingDisplay;
-		void QueuePendingDisplay ()
+		public void QueuePendingDisplay ()
 		{
 			// throttle
 			if (!pendingDisplay) {
@@ -629,10 +640,12 @@ namespace XtermSharp.Mac {
 		#endregion
 
 		int count;
+		private readonly TerminalViewOptions options;
+
 		public override void DrawRect (CGRect dirtyRect)
 		{
 			//Console.WriteLine ($"DrawRect: {dirtyRect}");
-			NSColor.White.Set ();
+			options.BackgroundColor.Set ();
 			NSGraphics.RectFill (dirtyRect);
 
 			CGContext context = NSGraphicsContext.CurrentContext.GraphicsPort;
