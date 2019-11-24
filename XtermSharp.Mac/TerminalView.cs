@@ -75,7 +75,8 @@ namespace XtermSharp.Mac {
 
 		/// <summary>
 		/// Gets or sets a value indicating whether this <see cref="T:XtermSharp.Mac.TerminalView"/> treats the "Alt/Option" key on the mac keyboard as a meta key,
-		/// which has the effect of sending ESC+letter when Meta-letter is pressed.   Otherwise, it passes the keystroke that MacOS provides from the OS keyboard.
+		/// which has the effect of sending ESC+letter when Meta-letter is pressed.   Otherwise, it passes the keystroke that MacOS provides from the OS keyboardmc
+		/// .
 		/// </summary>
 		/// <value><c>true</c> if option acts as a meta key; otherwise, <c>false</c>.</value>
 		public bool OptionAsMetaKey { get; set; } = true;
@@ -479,6 +480,18 @@ namespace XtermSharp.Mac {
 						break;
 					case NSFunctionKey.Delete:
 						Send (EscapeSequences.CmdDelKey);
+						break;
+					case NSFunctionKey.UpArrow:
+						Send (EscapeSequences.MoveUpNormal);
+						break;
+					case NSFunctionKey.DownArrow:
+						Send (EscapeSequences.MoveDownNormal);
+						break;
+					case NSFunctionKey.LeftArrow:
+						Send (EscapeSequences.MoveLeftNormal);
+						break;
+					case NSFunctionKey.RightArrow:
+						Send (EscapeSequences.MoveRightNormal);
 						break;
 					}
 				}
