@@ -33,13 +33,13 @@ namespace XtermSharp.VSMac {
 		public VSMacTerm()
 		{
 			terminal = new TerminalControl();
-			//this.Window.Content.Window.
 		}
+
 		protected override void Initialize (IPadWindow window)
 		{
 			base.Initialize (window);
-                }
-		
+		}
+
 		public override Control Control => terminal;
 
 		[CommandHandler (ViewCommands.ZoomIn)]
@@ -47,12 +47,12 @@ namespace XtermSharp.VSMac {
                 
 			var editorFont = IdeServices.FontService.GetFont ("Editor");
 			var font = NSFont.FromFontName (editorFont.Family,  (nfloat)editorFont.Size);
-                }
+		}
 
-  //  [<CommandHandler ("MonoDevelop.Ide.Commands.ViewCommands.ZoomOut")>]
+		//  [<CommandHandler ("MonoDevelop.Ide.Commands.ViewCommands.ZoomOut")>]
 		//member x.ZoomOut () = x.Editor.GetContent<IZoomable>().ZoomOut ()
 
-  //  [<CommandHandler ("MonoDevelop.Ide.Commands.ViewCommands.ZoomReset")>]
+		//  [<CommandHandler ("MonoDevelop.Ide.Commands.ViewCommands.ZoomReset")>]
 		//member x.ZoomReset () = x.Editor.GetContent<IZoomable>().ZoomReset ()
 	}
 
@@ -96,7 +96,6 @@ namespace XtermSharp.VSMac {
 
 		void SetFonts(TerminalViewOptions options)
 		{
-
 			var editorFont = IdeServices.FontService.GetFont ("Editor");
 			var font = NSFont.FromFontName (editorFont.Family, (nfloat)editorFont.Size);
 			options.Font = font;
@@ -108,6 +107,7 @@ namespace XtermSharp.VSMac {
 
 		public TerminalControl()
 		{
+			//TODO: This is a massive hack... we should not be using ActiveDocument events
 			var zoomable = IdeApp.Workbench.ActiveDocument.GetContent<ICocoaTextView> ();
 			
 			var options = new TerminalViewOptions ();
@@ -127,28 +127,34 @@ namespace XtermSharp.VSMac {
 			pid = Pty.ForkAndExec ("/bin/bash", new string [] { "/bin/bash" }, Terminal.GetEnvironmentVariables (), out fd, size);
 			DispatchIO.Read (fd, (nuint)readBuffer.Length, DispatchQueue.CurrentQueue, ChildProcessRead);
 
-			zoomable.ZoomLevelChanged += (sender, args) => {
-				var font = GetEditorFont ();
-				SetFonts (options);
-				var newFont = NSFont.FromFontName (font.FontName, (int)(font.PointSize * (nfloat)(args.NewZoomLevel / 100)));
-				options.Font = newFont;
-				options.FontBold = newFont;
-				options.FontBoldItalic = newFont;
-				options.FontItalic = newFont;
-				//terminalView.FontNormal = newFont;
-				terminalView.ComputeCellDimensions ();
-				var newsize = new UnixWindowSize ();
-				GetSize (terminalView.Terminal, ref newsize);
-				terminalView.Terminal.Resize (newsize.col, newsize.row);
-				var res = Pty.SetWinSize (fd, ref newsize);
-				
-				terminalView.UpdateDisplay ();
-				terminalView.FullBufferUpdate ();
-				terminalView.QueuePendingDisplay ();
-				terminalView.Frame = terminalView.Frame;
-			};
+	    //TODO: This is a massive hack... we should not be using ActiveDocument events
+	    if(zoomable != null)
+            zoomable.ZoomLevelChanged += (sender, args) =>
+            {
+                var font = GetEditorFont();
+                SetFonts(options);
+                var newFont = NSFont.FromFontName(font.FontName, (int)(font.PointSize * (nfloat)(args.NewZoomLevel / 100)));
+                options.Font = newFont;
+                options.FontBold = newFont;
+                options.FontBoldItalic = newFont;
+                options.FontItalic = newFont;
+                //terminalView.FontNormal = newFont;
+                terminalView.ComputeCellDimensions();
+                var newsize = new UnixWindowSize();
+                GetSize(terminalView.Terminal, ref newsize);
+                terminalView.Terminal.Resize(newsize.col, newsize.row);
+                var res = Pty.SetWinSize(fd, ref newsize);
 
-			terminalView.UserInput += (byte [] data) => {
+                //terminalView.UpdateDisplay();
+                //terminalView.FullBufferUpdate();
+                //terminalView.QueuePendingDisplay();
+		// this strange looking line is needed as the .Frame setter
+		// recalculates how many rows/columns can fit inside the frame
+		// based on frame dimensions and cell dimensions
+                terminalView.Frame = terminalView.Frame;
+            };
+
+            terminalView.UserInput += (byte [] data) => {
 				DispatchIO.Write (fd, DispatchData.FromByteBuffer (data), DispatchQueue.CurrentQueue, ChildProcessWrite);
 			};
 			terminalView.Feed ("Welcome to XtermSharp - NSView frontend!\n");
@@ -159,7 +165,7 @@ namespace XtermSharp.VSMac {
 				UnixWindowSize nz = new UnixWindowSize ();
 				GetSize (t, ref nz);
 				var res = Pty.SetWinSize (fd, ref nz);
-				Console.WriteLine (res);
+				//Console.WriteLine (res);
 			};
 		}
 
@@ -202,7 +208,7 @@ namespace XtermSharp.VSMac {
 		void ChildProcessWrite (DispatchData left, int error)
 		{
 			if (error != 0) {
-				throw new Exception ("Error writing data to child");
+				//throw new Exception ("Error writing data to child");
 			}
 		}
 	}
